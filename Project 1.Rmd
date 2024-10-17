@@ -1,0 +1,139 @@
+---
+title: "Project 1"
+author: "Madison Pascual"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 5
+    theme: cerulean
+---
+
+```{r, echo = FALSE}
+library(ggplot2)
+library(knitr)
+knitr::opts_chunk$set(eval = TRUE,
+                      warning = FALSE, 
+                      message = FALSE, 
+                      echo = FALSE,
+                      fig.align = "center"
+                      )
+na.rm = TRUE
+albums <- read.csv("Project1_Albums.csv")
+```
+
+# **Introduction**
+
+The dataset for this analysis comprises the [*Top 500 ranked albums* according to Rolling Stone in 2020](https://pudding.cool/2024/03/greatest-music/). These albums represent some of the most influential and popular works in music history, spaning a wide variety of time periods and genres, from `r min(albums$release_year)` to `r max(albums$release_year)` and Electronic to Latin. The dataset includes key information about each album, such as the year it was released, the genre and type of album, and numeric metrics including the number of weeks an album stayed on the [Billboard charts](https://www.billboard.com/charts/), its highest position on the Billboard charts, and its [Spotify](https://open.spotify.com/) popularity.
+
+[To find out how Spotify songs are ranked by popularity, visit [this website.](https://www.artist.tools/features/spotify-popularity-index#:~:text=This%20score%20is%20calculated%20based,your%20music%20performs%20over%20time.)]{style="font-size:12px;"}
+
+The outcome variable of interest is each albums' [**peak billboard position**,]{style="color:#00555A"} while the predictor variables are [**whether or not the albums spent at least 20 weeks on the Billboard charts**, **the albums' genres**,]{style="color:#00555A"} and their [**Spotify popularity**.]{style="color:#00555A"}
+
+![](https://www.rollingstone.com/wp-content/uploads/2020/10/500-albums-trailer.jpg?w=1581&h=1013&crop=1)
+
+<figcaption>[Hear the Trailer for Season 2 of Rolling Stone’s ‘500 Greatest Albums’ Podcast](https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.rollingstone.com%2Fmusic%2Fmusic-news%2Frolling-stone-500-greatest-albums-podcast-1249006%2F&psig=AOvVaw2h7lAmhE0890LYc_I4v8V3&ust=1727477327105000&source=images&cd=vfe&opi=89978449&ved=0CBcQjhxqFwoTCOiXndfY4YgDFQAAAAAdAAAAABAX)</figcaption>
+
+# **Outcome Variable**
+
+```{r}
+#Make a ggplot object for the dataset.
+albums_ggplot <- ggplot(albums)
+
+#Display the univariate distribution of whether or not an album reached 1 on Billboard with a "YES" or "NO".
+albums_ggplot + geom_histogram(aes(x = peak_billboard_position), fill = "deepskyblue4", binwidth = 5) + 
+  labs(
+    title = "Distribution of the Peak Position of Albums on Billboard Charts",
+    x = "Peak Position",
+    y = "Number of Albums",
+  )
+```
+
+The graph is [**skewed right, with `r sum((albums$peak_billboard_position >= 1) & (albums$peak_billboard_position <5))` albums having peaked between the top 1 and top 5 position on the Billboard charts.**]{style="color:red"} The minimum value of the peak position any album received (which is the best position achievable) is `r min(albums$peak_billboard_position, na.rm = TRUE)`. The Q1 of the peak positions is `r round(quantile(albums$peak_billboard_position, probs = 0.25, na.rm = TRUE))`. The median of the peak positions is `r round(median(albums$peak_billboard_position, na.rm = TRUE))`. The mean of the peak positions is `r round(mean(albums$peak_billboard_position, na.rm = TRUE))`. The Q3 of the peak positions is `r round(quantile(albums$peak_billboard_position, probs = 0.75, na.rm = TRUE))`. The maximum of the peak positions is `r round(max(albums$peak_billboard_position, na.rm = TRUE))` (which is the worst position achievable).
+
+# **Bivariate Analyses**
+
+### **Analysis 1**
+
+```{r}
+#Combine "Blues/Blues ROck" and "Blues/Blues Rock" genres to get rid of discrepency. 
+albums$genre <- ifelse(albums$genre == "Blues/Blues ROck", "Blues/Blues Rock", albums$genre)
+
+#Make variable that checks if an album has ever peaked at 1 on Billboard
+albums$peaked_yes_no <- ifelse(albums$peak_billboard_position == 1, "YES", "NO") 
+
+#Make a variable that checks if an album has spent at least 20 weeks on Billboard
+albums$long_time_billboard <- ifelse(albums$weeks_on_billboard >= 20, "YES", "NO") 
+
+#Make a ggplot object for the dataset.
+albums_ggplot <- ggplot(albums)
+
+#Create a graph to show the bivariate relationship with the outcome variable.
+albums_ggplot + geom_bar(aes(x = peaked_yes_no, fill = long_time_billboard,), position = "fill") + 
+  labs(
+    title = "Proportion of Albums that Reached #1 on Billboard Charts",
+    x = "Album Peaked at 1 on Billboard",
+    y = "Proportion",
+    fill = "Album had at least 20 Weeks on Billboard"
+  )
+
+#Convert the variables to numerical values.
+albums$peaked_yes_no_num <- ifelse(albums$peaked_yes_no == "YES", 1, 0)
+albums$long_time_billboard_num <- ifelse(albums$long_time_billboard == "YES", 1, 0)
+```
+
+The correlation coefficient of the relationship between if an album has ever peaked at 1 and if an album has spent at least 20 weeks on the Billboard charts is [**`r cor(albums$peaked_yes_no_num, albums$long_time_billboard_num, use = "complete.obs")`.**]{style="color:red"} There is a [**moderate positive relationship,**]{style="color:red"} which means there is some level of association between an album's peak and its time on the Billboard charts.
+
+### **Analysis 2**
+
+```{r}
+#Make a graph to display the bivariate relationship between peak position and genre.
+albums_ggplot + geom_boxplot(aes(x = peak_billboard_position, y = genre), fill = "deepskyblue4") + 
+  labs(
+    title = "Distribution of Peak Billboard Positions by Genre",
+    x = "Peak Billboard Position",
+    y = "Genre"
+  )
+
+```
+
+```{r, include = FALSE}
+aggregate(albums$peak_billboard_position ~ albums$genre, FUN = mean)
+```
+
+As the graph shows, [**the highest peak billboard position mean of all the genres is Afrobeats with an average of 201**]{style="color:red"} because the genre only had 2 albums to represent it, and both albums had a peak position of 201. Next are Big Band/Jazz with a mean position of 132, Latin with a mean position of 125.5, Punk/Post-Pink/New Wave/Power Pop with a mean position of 112, Reggae with a mean position of 109.9, Rock n' Roll/Rhythm & Blues with a mean position of 83.3, Electronic with a mean position of 66.7, Indie/Alternative Rock with a mean position of 52.6, Blues/Blues Rock with a mean position of 48.1, Country/Folk/Country Rock/Folk Rock with a mean position of 46, Singer-Songwriter/Heartland Rock with a mean position of 45.6, Funk/Disco with a mean position of 37.6, Soul/Gospel/R&B with a mean position of 34.8, Hard Rock/Metal with a mean position of 26.3, and , <span style="color:red">**Hip-Hop/Rap with the lowest mean peak position of 20.4.**
+
+### **Analysis 3**
+
+```{r}
+#Make a graph to display the bivariate relationship between peak position and spotify popularity. 
+albums_ggplot + geom_point(aes(x = peak_billboard_position, y = spotify_popularity), color = "deepskyblue4") + 
+  labs(
+    title = "Correlation between Peak Billboard Position and Spotify Popularity",
+    x = "Peak Spotify Position",
+    y = "Spotify Popularity",
+  )
+```
+
+The correlation coefficient of the relationship between an album's peak Billboard position and its Spotify popularity is [**`r cor(albums$peak_billboard_position, albums$spotify_popularity, use = "complete.obs")`.**]{style="color:red"} This means there is a [**moderate negative relationship,**]{style="color:red"} which means there is some level of association between the two variables, but there is also an amount of randomness that impacts each variable.
+
+# **Choice Elements**
+
+For my choice elements, I incorporated several advanced formatting techniques, including the use of *in-line code, hyperlinks, customized text, floating tables, and new variables.* In-line code is utilized in the narrative following my univariate graph, first bivariate graph, and third bivariate graph to emphasize key variables and operations. Hyperlinks are strategically placed at the beginning of the document to provide readers with direct access to external sources, including details on data collection and methodology. I customized the default text in all explanatory paragraphs following each graph, as well as in the initial sections that introduce and describe the variables used in the analysis. A floating table is positioned on the left side of the document for enhanced layout and readability. Additionally, I created new variables to conduct the first bivariate analysis, ensuring a more refined and relevant exploration of the data.
+
+# **Conclusion**
+
+In summary, this analysis explored the relationship between the peak Billboard position of the top 500 albums ranked by Rolling Stone in 2020 and several predictor variables, including album genres, their duration on the Billboard charts, and their popularity on Spotify. The distribution of peak Billboard positions was heavily skewed, with a large concentration of albums peaking between positions 1 and 5. A moderate positive correlation was observed between whether an album reached number 1 on the Billboard charts and whether it spent at least 20 weeks on the charts, suggesting that longevity is often associated with higher peak performance. The relationship between genre and peak Billboard position revealed that albums in genres like Hip-Hop/Rap had the lowest average peak position, indicating stronger performance, while Afrobeats had the highest average peak position due to the limited number of albums in the dataset. 
+
+Additionally, a moderate negative correlation between peak Billboard position and Spotify popularity suggests that albums with higher peak positions on the Billboard charts tend to have higher Spotify popularity. However, the relationship is not perfect, with some variability indicating that other factors may influence popularity and chart performance. These findings highlight the complex dynamics between album performance on traditional charts like Billboard and modern streaming platforms such as Spotify, and the role that genre plays in determining chart success.
+
+Future research could explore other variables that influence an album’s success. This could include examining the impact of an artist’s social media presence, global reach, and performance on other streaming platforms beyond Spotify to provide a more comprehensive understanding of modern music success. Additionally, segmenting the data by decades or release periods may reveal evolving trends influenced by cultural shifts in music consumption and production.
+
+### **Reference**
+
+Rolling Stone. (2020). *Top 500 Albums of All Time*. [https://pudding.cool/2024/03/greatest-music/](https://pudding.cool/2024/03/greatest-music/)
+
+Billboard Charts. (2024). *Music Charts, News, Photos & Video*. [https://www.billboard.com/charts/](https://www.billboard.com/charts/)
+
+Artist Tools. (2024). *Spotify Popularity Index*. [https://www.artist.tools/features/spotify-popularity-index](https://www.artist.tools/features/spotify-popularity-index)
