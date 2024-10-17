@@ -83,7 +83,7 @@ albums$peaked_yes_no_num <- ifelse(albums$peaked_yes_no == "YES", 1, 0)
 albums$long_time_billboard_num <- ifelse(albums$long_time_billboard == "YES", 1, 0)
 ```
 
-The correlation coefficient of the relationship between if an album has ever peaked at 1 and if an album has spent at least 20 weeks on the Billboard charts is [**`r cor(albums$peaked_yes_no_num, albums$long_time_billboard_num, use = "complete.obs")`.**]{style="color:red"} There is a [**moderate positive relationship,**]{style="color:red"} which means there is some level of association between an album's peak and its time on the Billboard charts.
+The correlation coefficient of the relationship between if an album has ever peaked at 1 and if an album has spent at least 20 weeks on the Billboard charts is [**`r round(cor(albums$peaked_yes_no_num, albums$long_time_billboard_num, use = "complete.obs"))`.**]{style="color:red"} There is a [**moderate positive relationship,**]{style="color:red"} which means there is some level of association between an album's peak and its time on the Billboard charts.
 
 ### **Analysis 2**
 
@@ -116,7 +116,7 @@ albums_ggplot + geom_point(aes(x = peak_billboard_position, y = spotify_populari
   )
 ```
 
-The correlation coefficient of the relationship between an album's peak Billboard position and its Spotify popularity is [**`r cor(albums$peak_billboard_position, albums$spotify_popularity, use = "complete.obs")`.**]{style="color:red"} This means there is a [**moderate negative relationship,**]{style="color:red"} which means there is some level of association between the two variables, but there is also an amount of randomness that impacts each variable.
+The correlation coefficient of the relationship between an album's peak Billboard position and its Spotify popularity is [**`r round(cor(albums$peak_billboard_position, albums$spotify_popularity, use = "complete.obs"))`.**]{style="color:red"} This means there is a [**moderate negative relationship,**]{style="color:red"} which means there is some level of association between the two variables, but there is also an amount of randomness that impacts each variable.
 
 # **Choice Elements**
 
